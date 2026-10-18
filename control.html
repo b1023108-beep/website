@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>クラゲロボット遠隔操作 - 公立はこだて未来大学</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+    :root {
+      --bg-color: #f1f5f9;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --primary: #0284c7;
+      --primary-light: #e0f2fe;
+      --accent-coral: #f43f5e;
+      --accent-yellow: #facc15;
+      --text-main: #1e293b;
+      --text-sub: #64748b;
+      --border-color: #cbd5e1;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      background-image: 
+        radial-gradient(circle at 10% 10%, #e0f2fe 0%, transparent 40%),
+        radial-gradient(circle at 90% 90%, #ffe4e6 0%, transparent 40%);
+      background-attachment: fixed;
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--primary);
+      letter-spacing: 0.5px;
+    }
+
+    .back-btn {
+      font-size: 0.85rem;
+      background: #ffffff;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:hover {
+      background: #f1f5f9;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    /* 注意書きバナー */
+    .notice-banner {
+      background: #fef3c7;
+      border: 1px solid #fde047;
+      border-radius: 12px;
+      padding: 12px 20px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      color: #78350f;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .notice-banner span {
+      font-size: 1.2rem;
+    }
+
+    .cockpit-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+
+    .monitor-box {
+      width: 100%;
+      height: 320px;
+      background: #ffffff;
+      border: 2px dashed #94a3b8;
+      border-radius: 16px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+      margin-bottom: 30px;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .monitor-tag {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 12px;
+    }
+
+    .monitor-status {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+
+    .monitor-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .monitor-desc {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+    }
+
+    .controls-layout {
+      display: grid;
+      grid-template-columns: 1fr 120px 1.2fr;
+      gap: 20px;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .controls-layout {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+    }
+
+    .dpad-container { display: flex; justify-content: center; align-items: center; }
+    .dpad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(3, 56px); gap: 6px; }
+    .dpad-btn { background: #ffffff; border: 2px solid var(--primary); color: var(--primary); border-radius: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; transition: all 0.1s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.05); user-select: none; }
+    .dpad-btn:active, .dpad-btn.active { background: var(--primary); color: #ffffff; transform: translateY(2px); box-shadow: none; }
+    .dpad-up    { grid-column: 2; grid-row: 1; }
+    .dpad-left  { grid-column: 1; grid-row: 2; }
+    .dpad-right { grid-column: 3; grid-row: 2; }
+    .dpad-down  { grid-column: 2; grid-row: 3; }
+
+    .flash-container { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+    .flash-btn { width: 80px; height: 80px; border-radius: 50%; background: var(--accent-yellow); border: none; cursor: pointer; box-shadow: 0 6px 16px rgba(250, 204, 21, 0.4); transition: all 0.15s ease; outline: none; }
+    .flash-btn:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(250, 204, 21, 0.6); }
+    .flash-btn:active { transform: scale(0.95); box-shadow: 0 2px 8px rgba(250, 204, 21, 0.4); }
+    .flash-label { font-size: 0.9rem; font-weight: 700; color: var(--text-main); letter-spacing: 0.5px; }
+
+    .right-controls { display: flex; flex-direction: column; gap: 20px; align-items: center; background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; }
+    .perspective-switch { display: flex; background: #f1f5f9; padding: 4px; border-radius: 12px; width: 100%; box-sizing: border-box; }
+    .perspective-btn { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: var(--text-sub); cursor: pointer; transition: all 0.2s ease; }
+    .perspective-btn.active { background: #ffffff; color: var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+
+    .steering-container { width: 100%; text-align: center; }
+    .steering-labels { display: flex; justify-content: space-between; font-weight: 700; font-size: 1rem; color: var(--primary); margin-bottom: 6px; padding: 0 6px; }
+    .steering-labels span { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    .steering-subtext { font-size: 0.65rem; color: var(--text-sub); font-weight: 500; }
+    .steering-slider { width: 100%; accent-color: var(--primary); cursor: pointer; }
+    .steering-desc { font-size: 0.8rem; font-weight: 700; color: var(--text-main); margin-top: 6px; background: #f8fafc; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); }
+
+    .connect-bar { margin-top: 24px; display: flex; justify-content: flex-end; }
+    .btn-connect { background: var(--primary); color: #ffffff; padding: 10px 20px; border-radius: 10px; font-weight: 700; border: none; cursor: pointer; font-size: 0.9rem; transition: all 0.2s ease; }
+    .btn-connect:hover { background: #0284c7; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">公立はこだて未来大学</div>
+    <a href="index.html" class="back-btn">← メインページへ戻る</a>
+  </header>
+
+  <div class="container">
+
+    <!-- 注意書きバナー -->
+    <div class="notice-banner">
+      <span>⚠️</span>
+      <div>
+        <strong>操作時の注意事項:</strong> システムの都合上、2人以上の同時操作はできません。ほかの方が操作している場合は、少々お待ちいただいてから操作していただくようお願いします。
+      </div>
+    </div>
+
+    <div class="cockpit-card">
+
+      <div class="monitor-box">
+        <span class="monitor-tag">遠隔カメラ・モニター</span>
+        <div class="monitor-status">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">待機中</span>
+        </div>
+
+        <div class="monitor-title">モニター</div>
+        <div class="monitor-desc">（ロボットのリアルタイムカメラ映像／動作モニター）</div>
+      </div>
+
+      <div class="controls-layout">
+
+        <div class="dpad-container">
+          <div class="dpad">
+            <button class="dpad-btn dpad-up" id="btnUp" title="前進">▲</button>
+            <button class="dpad-btn dpad-left" id="btnLeft" title="左移動">◄</button>
+            <button class="dpad-btn dpad-right" id="btnRight" title="右移動">►</button>
+            <button class="dpad-btn dpad-down" id="btnDown" title="後退">▼</button>
+          </div>
+        </div>
+
+        <div class="flash-container">
+          <button class="flash-btn" id="flashBtn" title="全点灯フラッシュ"></button>
+          <span class="flash-label">flash</span>
+        </div>
+
+        <div class="right-controls">
+          <div class="perspective-switch">
+            <button class="perspective-btn active" id="btnFpv">一人称</button>
+            <button class="perspective-btn" id="btnTpv">三人称</button>
+          </div>
+
+          <div class="steering-container">
+            <div class="steering-labels">
+              <span id="labelL">L<small class="steering-subtext">(左のみ)</small></span>
+              <span id="labelW">W<small class="steering-subtext">(両方)</small></span>
+              <span id="labelR">R<small class="steering-subtext">(右のみ)</small></span>
+            </div>
+            <input type="range" min="0" max="2" value="1" step="1" class="steering-slider" id="lightPatternSlider">
+            <div class="steering-desc" id="lightPatternDesc">
+              💡 点灯パターン: 両方点灯 (W)
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="connect-bar">
+        <button class="btn-connect" id="connectBtn">🔌 ArduinoとWeb Serialで接続する</button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    const statusText = document.getElementById('statusText');
+    const statusDot = document.getElementById('statusDot');
+
+    const lightSlider = document.getElementById('lightPatternSlider');
+    const lightDesc = document.getElementById('lightPatternDesc');
+
+    const patterns = [
+      { code: 'L', label: '💡 左ライトのみ点灯 (L)', status: '左ライトON' },
+      { code: 'W', label: '💡 両側ライト点灯 (W)', status: '両側ライトON' },
+      { code: 'R', label: '💡 右ライトのみ点灯 (R)', status: '右ライトON' }
+    ];
+
+    lightSlider.addEventListener('input', (e) => {
+      const idx = e.target.value;
+      const selected = patterns[idx];
+      lightDesc.textContent = selected.label;
+      statusText.textContent = selected.status;
+      statusDot.style.background = "#facc15";
+      console.log('送信命令:', selected.code);
+    });
+
+    document.getElementById('labelL').addEventListener('click', () => { lightSlider.value = 0; lightSlider.dispatchEvent(new Event('input')); });
+    document.getElementById('labelW').addEventListener('click', () => { lightSlider.value = 1; lightSlider.dispatchEvent(new Event('input')); });
+    document.getElementById('labelR').addEventListener('click', () => { lightSlider.value = 2; lightSlider.dispatchEvent(new Event('input')); });
+
+    document.getElementById('flashBtn').addEventListener('click', () => {
+      statusText.textContent = "フラッシュ発光中";
+      statusDot.style.background = "#facc15";
+    });
+
+    const btnFpv = document.getElementById('btnFpv');
+    const btnTpv = document.getElementById('btnTpv');
+    btnFpv.addEventListener('click', () => { btnFpv.classList.add('active'); btnTpv.classList.remove('active'); });
+    btnTpv.addEventListener('click', () => { btnTpv.classList.add('active'); btnFpv.classList.remove('active'); });
+
+    ['btnUp', 'btnDown', 'btnLeft', 'btnRight'].forEach(id => {
+      document.getElementById(id).addEventListener('click', () => {});
+    });
+
+    document.getElementById('connectBtn').addEventListener('click', () => {
+      statusText.textContent = "ONLINE";
+      statusDot.style.background = "#10b981";
+    });
+  </script>
+
+</body>
+</html>
